@@ -48,8 +48,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_superuser or user.is_staff:
-            return Task.objects.all()
-        return Task.objects.filter(created_by=user)
+            return Task.objects.all().order_by('-created_at')  # Order by creation date, descending
+        return Task.objects.filter(created_by=user).order_by('-created_at')  # Order by creation date, descending
 
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:
