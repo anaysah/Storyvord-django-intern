@@ -24,3 +24,27 @@ def register(request):
             'message': 'User registered successfully'
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+from rest_framework import viewsets
+from .models import Task
+from .serializers import TaskSerializer
+from .permissions import IsTaskOwnerOrAdmin
+
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser or user.is_staff:
+            return Task.objects.all()
+        return Task.objects.filter(created_by=user)
+
+    def get_permissions(self):
+        if self.action in ['update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated, IsTaskOwnerOrAdmin]
+        return super().get_permissions()
