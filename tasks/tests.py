@@ -22,15 +22,15 @@ class TaskAPITestCase(TestCase):
         
         # Create some test tasks
         self.task_by_user = Task.objects.create(
-            title="User Task", description="Normal user task", created_by=self.user
+            title="User Task", description="Normal user task", created_by=self.user, status='pending', priority='low'
         )
         self.task_by_admin = Task.objects.create(
-            title="Admin Task", description="Admin task", created_by=self.admin
+            title="Admin Task", description="Admin task", created_by=self.admin, status='completed', priority='high'
         )
     
     def test_create_task(self):
         """Test POST /api/tasks/ - Normal user can create a task"""
-        data = {'title': 'New Task', 'description': 'Test task', 'completed': False}
+        data = {'title': 'New Task', 'description': 'Test task', 'status': 'pending', 'priority': 'medium'}
         response = self.client.post(
             '/api/tasks/',
             data=json.dumps(data),
@@ -81,7 +81,7 @@ class TaskAPITestCase(TestCase):
 
     def test_update_task(self):
         """Test PUT /api/tasks/{id}/ - User can update their task"""
-        data = {'title': 'Updated Task', 'description': 'Updated', 'completed': True}
+        data = {'title': 'Updated Task', 'description': 'Updated', 'status': 'completed', 'priority': 'high'}
         response = self.client.put(
             f'/api/tasks/{self.task_by_user.id}/',
             data=json.dumps(data),
@@ -90,7 +90,8 @@ class TaskAPITestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.task_by_user.refresh_from_db()
-        self.assertTrue(self.task_by_user.completed)
+        self.assertEqual(self.task_by_user.status, 'completed')
+        self.assertEqual(self.task_by_user.priority, 'high')
 
     def test_delete_task(self):
         """Test DELETE /api/tasks/{id}/ - User can delete their task"""
@@ -140,17 +141,24 @@ class TaskAPITestCase(TestCase):
         response = self.client.get('/api/tasks/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_filter_by_completed(self):
-        """Test GET /api/tasks/?completed=true - Filter by completed status"""
-        Task.objects.create(title="Completed Task", completed=True, created_by=self.user)
+    def test_filter_by_status(self):
+        Task.objects.create(title="Completed Task", status='completed', priority='medium', created_by=self.user)
         response = self.client.get(
-            '/api/tasks/?completed=true',
-            HTTP_AUTHORIZATION=f'Bearer {self.user_token}'
+            '/api/tasks/?status=completed', HTTP_AUTHORIZATION=f'Bearer {self.user_token}'
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         tasks = response.json()['results']
         self.assertEqual(len(tasks), 1)
-        self.assertTrue(tasks[0]['completed'])
+        self.assertEqual(tasks[0]['status'], 'completed')
+
+    def test_filter_by_priority(self):
+        response = self.client.get(
+            '/api/tasks/?priority=low', HTTP_AUTHORIZATION=f'Bearer {self.user_token}'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        tasks = response.json()['results']
+        self.assertEqual(len(tasks), 1)
+        self.assertEqual(tasks[0]['priority'], 'low')
 
     def test_filter_by_created_date(self):
         """Test GET /api/tasks/?created_at__gte=... - Filter by date range"""

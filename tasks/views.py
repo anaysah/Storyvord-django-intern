@@ -37,7 +37,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = {
-        'completed': ['exact'],
+        'status': ['exact'],  # Filter by 'pending' or 'completed'
+        'priority': ['exact'],  # Filter by 'low', 'medium', 'high'
         'created_at': ['gte', 'lte'],  # Greater than or equal to, less than or equal to
         'updated_at': ['gte', 'lte'],
     }
