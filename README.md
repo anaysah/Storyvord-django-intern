@@ -8,7 +8,7 @@ This is a Django-based RESTful API for managing tasks, built with Django Rest Fr
 - **User Authentication**: Register and log in with JWT tokens.
 - **Task Management**: Create, read, update, and delete tasks.
 - **Permissions**: Normal users manage their own tasks; admins can manage all tasks.
-- **Filtering**: Filter tasks by `completed` status and date ranges (`created_at`, `updated_at`).
+- **Filtering**: Filter tasks by status, priority, and date ranges.
 - **Pagination**: 10 tasks per page.
 
 ## Setup Instructions
@@ -69,12 +69,12 @@ The API will be available at `http://127.0.0.1:8000/`.
 Include the `Authorization: Bearer <access-token>` header for all task endpoints.
 - **List Tasks**: `GET /api/tasks/`
   - Normal users see their tasks; admins see all.
-  - Filters: `?completed=true`, `?created_at__gte=2024-01-01`, `?updated_at__lte=2025-03-18`
+  - Filters: `?status=completed`, `?priority=high`, `?created_at__gte=2024-01-01`
 - **Create Task**: `POST /api/tasks/`
-  - Payload: `{"title": "New Task", "description": "Do something", "completed": false}`
+  - Payload: `{"title": "New Task", "description": "Do something", "status": "pending", "priority": "medium"}`
 - **Retrieve Task**: `GET /api/tasks/<id>/`
 - **Update Task**: `PUT /api/tasks/<id>/`
-  - Payload: `{"title": "Updated Task", "completed": true}`
+  - Payload: `{"title": "Updated Task", "status": "completed"}`
 - **Delete Task**: `DELETE /api/tasks/<id>/`
 
 ## Running Tests
